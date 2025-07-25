@@ -1,0 +1,32 @@
+name: Build and publish docker image
+
+on:
+  workflow_call:
+    inputs:
+      environment: 
+        type: string
+        required: true
+      
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@v3
+
+        - name: Login Docker Hub
+          run: sudo docker login -u ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
+
+        - name: Build server docker image
+          run: docker build -t furqas/instant_term-server-"${{ inputs.environment }}" -f server/Dockerfile .
+
+        - name: Push server to docker hub
+          run: sudo docker push furqas/instant_term-server-"${{ inputs.environment }}"
+
+        - name: Build cli docker image
+          run: docker build -t furqas/instant_term-cli-"${{ inputs.environment }}" -f cli/Dockerfile .
+       
+        - name: Push cli to dockerhub
+          run: sudo docker push furqas/instant_term-cli-"${{ inputs.environment }}"
