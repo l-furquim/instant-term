@@ -50,7 +50,9 @@ func main() {
 	}()
 
 	fmt.Println("Type messages and press Enter to send (quit to exit the cli):")
+
 	reader := bufio.NewReader(os.Stdin)
+
 	for {
 		input, err := reader.ReadString('\n')
 		if err != nil {
@@ -59,8 +61,8 @@ func main() {
 		}
 		input = strings.TrimSpace(input)
 
-		if input == "quit" {
-			signal.Notify(interrupt, os.Interrupt)
+		if input == "/quit" {
+			os.Exit(0)
 		}
 
 		conn.WriteMessage(websocket.TextMessage, []byte(input))
