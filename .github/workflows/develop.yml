@@ -2,7 +2,7 @@ name: Deploy to dev
 
 on: 
   push:
-      branches: ["develop"]
+    branches: ["develop"]
 
 permissions:
   id-token: write
@@ -13,19 +13,19 @@ jobs:
     uses: ./.github/workflows/terraform.yml
     with:
       environment: dev
-      aws-assume-role-arn: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
       aws-region: "us-east-1"
-      aws-state-s3-bucket: ${{ secrets.AWS_STATE_S3_BUCKET }}
-      aws-lock-dynamodb-table: ${{ secrets.AWS_LOCK_DYNAMODB_TABLE }}
       destroy: false
+    secrets:
+      AWS_ASSUME_ROLE_ARN: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+      AWS_STATE_S3_BUCKET: ${{ secrets.AWS_STATE_S3_BUCKET }}
+      AWS_LOCK_DYNAMODB_TABLE: ${{ secrets.AWS_LOCK_DYNAMODB_TABLE }}
 
   ecs-build-deploy:
-    if: true # alterar para destroy ou nao
+    if: true
     uses: ./.github/workflows/ecs.yml
     with:
       environment: dev
       aws-region: "us-east-1"
       cluster-name: instant-term-cluster
-      aws-assume-role-arn: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
     secrets:
       AWS_ASSUME_ROLE_ARN: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
