@@ -46,8 +46,8 @@ jobs:
         id: build-server
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: instant-term-server-${{ inputs.environment }}
-          IMAGE_TAG: ${{ github.sha }}
+          ECR_REPOSITORY: instant-term-server
+          IMAGE_TAG: latest
         run: |
          
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f server/Dockerfile .
@@ -63,8 +63,8 @@ jobs:
         id: build-cli
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: instant-term-cli-${{ inputs.environment }}
-          IMAGE_TAG: ${{ github.sha }}
+          ECR_REPOSITORY: instant-term-cli
+          IMAGE_TAG: latest
         run: |
           
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f cli/Dockerfile .
@@ -76,52 +76,52 @@ jobs:
           
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-  deploy:
-    name: Deploy to ECS
-    needs: build
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ inputs.aws-assume-role-arn }}
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
-          aws-region: ${{ inputs.aws-region }}
-
-      
-      - name: Update server task definition
-        id: server-task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: .aws/task-definition-server-${{ inputs.environment }}.json
-          container-name: instant-term-server
-          image: ${{ needs.build.outputs.server-image }}
-
-      - name: Deploy server to ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.server-task-def.outputs.task-definition }}
-          service: instant-term-server-${{ inputs.environment }}
-          cluster: ${{ inputs.cluster-name }}
-          wait-for-service-stability: true
-
-      - name: Update CLI task definition
-        id: cli-task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: .aws/task-definition-cli-${{ inputs.environment }}.json
-          container-name: instant-term-cli
-          image: ${{ needs.build.outputs.cli-image }}
-
-      - name: Deploy CLI to ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.cli-task-def.outputs.task-definition }}
-          service: instant-term-cli-${{ inputs.environment }}
-          cluster: ${{ inputs.cluster-name }}
-          wait-for-service-stability: true
+  #deploy:
+  #  name: Deploy to ECS
+  #  needs: build
+  #  runs-on: ubuntu-latest
+  #  environment: ${{ inputs.environment }}
+  #  
+  #  steps:
+  #    - name: Checkout code
+  #      uses: actions/checkout@v4
+#
+  #    - name: Configure AWS credentials
+  #      uses: aws-actions/configure-aws-credentials@v4
+  #      with:
+  #        role-to-assume: ${{ inputs.aws-assume-role-arn }}
+  #        role-session-name: GitHub_to_AWS_via_FederatedOIDC
+  #        aws-region: ${{ inputs.aws-region }}
+#
+  #    
+  #    - name: Update server task definition
+  #      id: server-task-def
+  #      uses: aws-actions/amazon-ecs-render-task-definition@v1
+  #      with:
+  #        task-definition: .aws/task-definition-server-${{ inputs.environment }}.json
+  #        container-name: instant-term-server
+  #        image: ${{ needs.build.outputs.server-image }}
+#
+  #    - name: Deploy server to ECS
+  #      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+  #      with:
+  #        task-definition: ${{ steps.server-task-def.outputs.task-definition }}
+  #        service: instant-term-server-${{ inputs.environment }}
+  #        cluster: ${{ inputs.cluster-name }}
+  #        wait-for-service-stability: true
+#
+  #    - name: Update CLI task definition
+  #      id: cli-task-def
+  #      uses: aws-actions/amazon-ecs-render-task-definition@v1
+  #      with:
+  #        task-definition: .aws/task-definition-cli-${{ inputs.environment }}.json
+  #        container-name: instant-term-cli
+  #        image: ${{ needs.build.outputs.cli-image }}
+#
+  #    - name: Deploy CLI to ECS
+  #      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+  #      with:
+  #        task-definition: ${{ steps.cli-task-def.outputs.task-definition }}
+  #        service: instant-term-cli-${{ inputs.environment }}
+  #        cluster: ${{ inputs.cluster-name }}
+  #        wait-for-service-stability: true

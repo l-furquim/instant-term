@@ -1,7 +1,7 @@
-name: Deploy to prod
+name: Deploy to dev
 
 on: 
-  pull_request:
+  push:
       branches: ["develop"]
 
 permissions:
@@ -12,9 +12,20 @@ jobs:
   terraform:
     uses: ./.github/workflows/terraform.yml
     with:
-      environment: prod
-      aws-assume-role-arn: "arn:aws:iam::710271919573:role/github-actions-l-furquim"
+      environment: dev
+      aws-assume-role-arn: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
       aws-region: "us-east-1"
-      aws-state-s3-bucket: "tfstate-710271919573"
-      aws-lock-dynamodb-table: "terraform-lock"
+      aws-state-s3-bucket: ${{ secrets.AWS_STATE_S3_BUCKET }}
+      aws-lock-dynamodb-table: ${{ secrets.AWS_LOCK_DYNAMODB_TABLE }}
       destroy: false
+
+  ecs-build-deploy:
+    if: true # alterar para destroy ou nao
+    uses: ./.github/workflows/ecs.yml
+    with:
+      environment: dev
+      aws-region: "us-east-1"
+      cluster-name: instant-term-cluster
+      aws-assume-role-arn: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+    secrets:
+      AWS_ASSUME_ROLE_ARN: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
