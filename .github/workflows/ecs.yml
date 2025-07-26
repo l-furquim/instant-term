@@ -31,7 +31,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ inputs.aws-assume-role-arn }}
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ inputs.aws-region }}
 
@@ -46,14 +46,8 @@ jobs:
           ECR_REPOSITORY: instant-term-server
           IMAGE_TAG: latest
         run: |
-         
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f server/Dockerfile .
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -f server/Dockerfile .
-          
-          
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       - name: Build and push CLI image
@@ -63,14 +57,8 @@ jobs:
           ECR_REPOSITORY: instant-term-cli
           IMAGE_TAG: latest
         run: |
-          
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f cli/Dockerfile .
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -f cli/Dockerfile .
-          
-         
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
   #deploy:
@@ -86,11 +74,10 @@ jobs:
   #    - name: Configure AWS credentials
   #      uses: aws-actions/configure-aws-credentials@v4
   #      with:
-  #        role-to-assume: ${{ inputs.aws-assume-role-arn }}
+  #        role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
   #        role-session-name: GitHub_to_AWS_via_FederatedOIDC
   #        aws-region: ${{ inputs.aws-region }}
 #
-  #    
   #    - name: Update server task definition
   #      id: server-task-def
   #      uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -122,3 +109,4 @@ jobs:
   #        service: instant-term-cli-${{ inputs.environment }}
   #        cluster: ${{ inputs.cluster-name }}
   #        wait-for-service-stability: true
+#
