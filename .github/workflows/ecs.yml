@@ -12,9 +12,6 @@ on:
       cluster-name:
         required: true
         type: string
-      aws-assume-role-arn:
-        required: true
-        type: string
     secrets:
       AWS_ASSUME_ROLE_ARN:
         required: true

@@ -4,22 +4,20 @@ on:
   workflow_call:
     inputs:
       environment:
-        type: string
         required: true
-      aws-assume-role-arn:
         type: string
-        required: true
-      aws-state-s3-bucket:
-        type: string
-        required: true
-      aws-lock-dynamodb-table:
-        type: string
-        required: true
       aws-region:
-        type: string
         required: true
+        type: string
       destroy:
+        required: true
         type: boolean
+    secrets:
+      AWS_ASSUME_ROLE_ARN:
+        required: true
+      AWS_STATE_S3_BUCKET:
+        required: true
+      AWS_LOCK_DYNAMODB_TABLE:
         required: true
 
 jobs:
