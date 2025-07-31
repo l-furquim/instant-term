@@ -56,7 +56,7 @@ jobs:
         run: terraform validate
 
       - name: Terraform destroy
-        if: ${{ inputs.destroy }} == true
+        if: ${{ inputs.destroy == true}} 
         id: terraform-destroy
         run: |
           cd infra &&
@@ -64,7 +64,7 @@ jobs:
           terraform destroy -var-file="./envs/${{ inputs.environment }}/terraform.tfvars" -auto-approve
 
       - name: Terraform plan
-        if: ${{ inputs.destroy }} != true
+        if: ${{ !inputs.destroy }}
         id: terraform-plan
         run: |
           cd infra &&
@@ -72,7 +72,7 @@ jobs:
           terraform plan -var-file="./envs/${{ inputs.environment }}/terraform.tfvars" -out="${{ inputs.environment }}.plan"
 
       - name: Terraform apply
-        if: ${{ inputs.destroy }} != true
+        if: ${{ !inputs.destroy }}
         id: terraform-apply
         run: |
           cd infra &&
