@@ -1,4 +1,3 @@
-
 name: Deploy to dev
 
 on: 
@@ -17,7 +16,7 @@ jobs:
     steps:
       - name: Set destroy variable
         id: set
-        run: echo "destroy=true" >> $GITHUB_OUTPUT
+        run: echo "destroy=false" >> $GITHUB_OUTPUT
 
   terraform:
     needs: prepare
@@ -32,13 +31,14 @@ jobs:
       AWS_LOCK_DYNAMODB_TABLE: ${{ secrets.AWS_LOCK_DYNAMODB_TABLE }}
 
   ecs-build-deploy:
-    needs: prepare
+    needs: [prepare, terraform]
     if: ${{ needs.prepare.outputs.destroy == 'false' }}
     uses: ./.github/workflows/ecs.yml
     with:
       environment: dev
       aws-region: "us-east-1"
-      cluster-name: instant-term-cluster
+      cluster-name: ${{ needs.terraform.outputs.cluster_name }}
+      cli-task-arn: ${{ needs.terraform.outputs.cli_task_def_arn }}
+      server-task-arn: ${{ needs.terraform.outputs.server_task_def_arn }}
     secrets:
       AWS_ASSUME_ROLE_ARN: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
-

@@ -9,27 +9,35 @@ permissions:
   contents: read
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      destroy: ${{ steps.set.outputs.destroy }}
+    steps:
+      - name: Set destroy variable
+        id: set
+        run: echo "destroy=true" >> $GITHUB_OUTPUT
+
   terraform:
+    needs: prepare
     uses: ./.github/workflows/terraform.yml
     with:
-      environment: dev
+      environment: prod 
       aws-region: "us-east-1"
-      aws-assume-role-arn: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
-      aws-state-s3-bucket: ${{ secrets.AWS_STATE_S3_BUCKET }}
-      aws-lock-dynamodb-table: ${{ secrets.AWS_LOCK_DYNAMODB_TABLE }}
-      destroy: false
-    secrets: inherit
+      destroy: ${{ needs.prepare.outputs.destroy }}
+    secrets:
+      AWS_ASSUME_ROLE_ARN: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+      AWS_STATE_S3_BUCKET: ${{ secrets.AWS_STATE_S3_BUCKET }}
+      AWS_LOCK_DYNAMODB_TABLE: ${{ secrets.AWS_LOCK_DYNAMODB_TABLE }}
 
   ecs-build-deploy:
-    name: Build and Deploy to Dev
-    needs: terraform
-    if: true # alterar para destroy ou nao
+    needs: prepare
+    if: ${{ needs.prepare.outputs.destroy == 'false' }}
     uses: ./.github/workflows/ecs.yml
     with:
       environment: dev
-      aws-region: us-east-1
-      cluster-name: instant-term-dev
-      aws-assume-role-arn: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+      aws-region: "us-east-1"
+      cluster-name: instant-term-cluster
     secrets:
       AWS_ASSUME_ROLE_ARN: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
 

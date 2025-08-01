@@ -23,11 +23,13 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-
+    outputs:
+      cli_task_def_arn: ${{ steps.outputs.outputs.cli_task_def_arn }}
+      server_task_def_arn: ${{ steps.outputs.outputs.server_task_def_arn }}
+      cluster_name: ${{ steps.outputs.outputs.cluster_name }}
     defaults:
       run:
         shell: bash
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -53,10 +55,10 @@ jobs:
             -backend-config="dynamodb_table=${{ secrets.AWS_LOCK_DYNAMODB_TABLE }}"
 
       - name: Terraform validate
-        run: terraform validate
+        run: cd infra && terraform validate
 
       - name: Terraform destroy
-        if: ${{ inputs.destroy == true}} 
+        if: ${{ inputs.destroy == true }}
         id: terraform-destroy
         run: |
           cd infra &&
@@ -78,3 +80,12 @@ jobs:
           cd infra &&
           terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }} &&
           terraform apply "${{ inputs.environment }}.plan"
+
+      - name: Get Terraform Outputs
+        id: outputs
+        if: ${{ !inputs.destroy }}
+        run: |
+          cd infra &&
+          echo "server_task_def_arn=$(terraform output -raw server_task_definition_arn)" >> $GITHUB_OUTPUT
+          echo "cli_task_def_arn=$(terraform output -raw cli_task_definition_arn)" >> $GITHUB_OUTPUT
+          echo "cluster_name=$(terraform output -raw cluster_name)" >> $GITHUB_OUTPUT
