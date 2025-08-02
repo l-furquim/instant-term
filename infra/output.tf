@@ -6,7 +6,7 @@ output "cli_ecr_repository_url" {
   value = aws_ecr_repository.cli_ecr_repository.repository_url
 }
 
-output "cluster_name" {
+output "ecs_cluster_name" {
   value = aws_ecs_cluster.main.name
 }
 
