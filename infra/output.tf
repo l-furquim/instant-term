@@ -6,16 +6,16 @@ output "cli_ecr_repository_url" {
   value = aws_ecr_repository.cli_ecr_repository.repository_url
 }
 
-output "ecs_cluster_name" {
+output "cluster_name" {
   value = aws_ecs_cluster.main.name
 }
 
 output "server_ecs_service_name" {
-  value = aws_ecs_service.server-service.name
+  value = aws_ecs_service.server_service.name
 }
 
 output "cli_ecs_service_name" {
-  value = aws_ecs_service.cli-service.name
+  value = aws_ecs_service.cli_service.name
 }
 
 output "server_task_definition_arn" {

@@ -30,22 +30,22 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
 }
 
 resource "aws_ecs_task_definition" "server-task-definition" {
-  family = "instant-term-task"
-  network_mode = "awsvpc"
+  family                   = "instant-term-task"
+  network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu = 256
-  memory = 512
-  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  cpu                      = 256
+  memory                   = 512
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
     {
-      name = "instant-term-server-container"
+      name  = "instant-term-server-container"
       image = "${aws_ecr_repository.server_ecr_repository.repository_url}:latest"
       portMappings = [
         {
           containerPort = 9090
-          hostPort = 9090
-          protocol = "tpc"
+          hostPort      = 9090
+          protocol      = "tpc"
         }
       ]
       logConfiguration = {
@@ -65,22 +65,22 @@ resource "aws_ecs_task_definition" "server-task-definition" {
 }
 
 resource "aws_ecs_task_definition" "cli-task-definition" {
-  family = "instant-term-task"
-  network_mode = "awsvpc"
+  family                   = "instant-term-task"
+  network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu = 256
-  memory = 512
-  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  cpu                      = 256
+  memory                   = 512
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
     {
-      name = "instant-term-cli-container"
+      name  = "instant-term-cli-container"
       image = "${aws_ecr_repository.cli_ecr_repository.repository_url}:latest"
       portMappings = [
         {
           containerPort = 80
-          hostPort = 80
-          protocol = "tpc"
+          hostPort      = 80
+          protocol      = "tpc"
         }
       ]
       logConfiguration = {
@@ -99,41 +99,41 @@ resource "aws_ecs_task_definition" "cli-task-definition" {
   }
 }
 
-resource "aws_ecs_service" "server-service" {
-  name = "instant-term-server-service"
-  cluster = aws_ecs_cluster.main.id
+resource "aws_ecs_service" "server_service" {
+  name            = "instant-term-server-service"
+  cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.server-task-definition.arn
-  desired_count = 1
-  launch_type = "FARGATE"
+  desired_count   = 1
+  launch_type     = "FARGATE"
 
   network_configuration {
-    subnets = aws_subnet.public[*].id
-    security_groups = [aws_security_group.server_ecs_tasks_sg.id]
+    subnets          = aws_subnet.public[*].id
+    security_groups  = [aws_security_group.server_ecs_tasks_sg.id]
     assign_public_ip = true
   }
 
   tags = {
-    Name = "instant-term-server-service"
+    Name        = "instant-term-server-service"
     Environment = var.environment
   }
 
 }
 
-resource "aws_ecs_service" "cli-service" {
-  name = "instant-term-cli-service"
-  cluster = aws_ecs_cluster.main.id
+resource "aws_ecs_service" "cli_service" {
+  name            = "instant-term-cli-service"
+  cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.cli-task-definition.arn
-  desired_count = 1
-  launch_type = "FARGATE"
+  desired_count   = 1
+  launch_type     = "FARGATE"
 
   network_configuration {
-    subnets = aws_subnet.public[*].id
-    security_groups = [aws_security_group.cli_ecs_tasks_sg.id]
+    subnets          = aws_subnet.public[*].id
+    security_groups  = [aws_security_group.cli_ecs_tasks_sg.id]
     assign_public_ip = true
   }
 
   tags = {
-    Name = "instant-term-cli-service"
+    Name        = "instant-term-cli-service"
     Environment = var.environment
   }
 
