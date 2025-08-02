@@ -19,6 +19,7 @@ jobs:
         run: echo "destroy=true" >> $GITHUB_OUTPUT
 
   terraform:
+    needs: prepare
     uses: ./.github/workflows/terraform.yml
     with:
       environment: dev
