@@ -4,36 +4,37 @@ on:
   workflow_call:
     inputs:
       environment:
-        type: string
         required: true
-      aws-assume-role-arn:
         type: string
-        required: true
-      aws-state-s3-bucket:
-        type: string
-        required: true
-      aws-lock-dynamodb-table:
-        type: string
-        required: true
       aws-region:
-        type: string
         required: true
+        type: string
       destroy:
+        required: true
         type: boolean
+    secrets:
+      AWS_ASSUME_ROLE_ARN:
+        required: true
+      AWS_STATE_S3_BUCKET:
+        required: true
+      AWS_LOCK_DYNAMODB_TABLE:
         required: true
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
-
+    outputs:
+      cli_task_def_arn: ${{ steps.outputs.outputs.cli_task_def_arn }}
+      server_task_def_arn: ${{ steps.outputs.outputs.server_task_def_arn }}
+      cluster_name: ${{ steps.outputs.outputs.cluster_name }}
     defaults:
       run:
         shell: bash
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -42,39 +43,50 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ inputs.aws-assume-role-arn }}
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ inputs.aws-region }}
-      
+
       - name: Terraform init
         run: |
           cd infra && terraform init \
-            -backend-config="bucket=${{ inputs.aws-state-s3-bucket }}" \
+            -backend-config="bucket=${{ secrets.AWS_STATE_S3_BUCKET }}" \
             -backend-config="key=${{ github.event.repository.name }}" \
             -backend-config="region=${{ inputs.aws-region }}" \
-            -backend-config="dynamodb_table=${{ inputs.aws-lock-dynamodb-table }}" 
-      
+            -backend-config="dynamodb_table=${{ secrets.AWS_LOCK_DYNAMODB_TABLE }}"
+
       - name: Terraform validate
         run: terraform validate
 
       - name: Terraform destroy
-        if: ${{ inputs.destroy }} == true
+        if: ${{ inputs.destroy == true}} 
         id: terraform-destroy
-        run: cd infra &&
+        run: |
+          cd infra &&
           terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }} &&
           terraform destroy -var-file="./envs/${{ inputs.environment }}/terraform.tfvars" -auto-approve
 
       - name: Terraform plan
-        if: ${{ inputs.destroy }} != true
+        if: ${{ !inputs.destroy }}
         id: terraform-plan
-        run: cd infra && 
-              terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }} &&
-              terraform plan -var-file="./envs/${{ inputs.environment }}/terraform.tfvars" -out="${{ inputs.environment }}.plan"
+        run: |
+          cd infra &&
+          terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }} &&
+          terraform plan -var-file="./envs/${{ inputs.environment }}/terraform.tfvars" -out="${{ inputs.environment }}.plan"
 
       - name: Terraform apply
-        if: ${{ inputs.destroy }} != true
+        if: ${{ !inputs.destroy }}
         id: terraform-apply
-        run: cd infra &&
+        run: |
+          cd infra &&
           terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }} &&
-          terraform apply "${{ inputs.environment }}.plan"  
-      
+          terraform apply "${{ inputs.environment }}.plan"
+
+      - name: Get Terraform Outputs
+        id: outputs
+        if: ${{ !inputs.destroy }}
+        run: |
+          cd infra
+          echo "server_task_def_arn=$(terraform output -raw server_task_definition_arn)" >> $GITHUB_OUTPUT
+          echo "cli_task_def_arn=$(terraform output -raw cli_task_definition_arn)" >> $GITHUB_OUTPUT
+          echo "cluster_name=$(terraform output -raw cluster_name)" >> $GITHUB_OUTPUT
