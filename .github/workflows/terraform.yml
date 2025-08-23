@@ -86,6 +86,7 @@ jobs:
         id: outputs
         if: ${{ !inputs.destroy }}
         run: |
+          cd infra
           echo "server_task_def_arn=$(terraform output -raw server_task_definition_arn)" >> $GITHUB_OUTPUT
           echo "cli_task_def_arn=$(terraform output -raw cli_task_definition_arn)" >> $GITHUB_OUTPUT
           echo "cluster_name=$(terraform output -raw cluster_name)" >> $GITHUB_OUTPUT
