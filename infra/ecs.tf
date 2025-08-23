@@ -30,12 +30,14 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
 }
 
 resource "aws_ecs_task_definition" "server-task-definition" {
-  family                   = "instant-term-task"
+  family                   = "instant-term-server-task"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = 256
   memory                   = 512
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  depends_on = [aws_cloudwatch_log_group.ecs_logs]
 
   container_definitions = jsonencode([
     {
@@ -45,7 +47,7 @@ resource "aws_ecs_task_definition" "server-task-definition" {
         {
           containerPort = 9090
           hostPort      = 9090
-          protocol      = "tpc"
+          protocol      = "tcp"
         }
       ]
       logConfiguration = {
@@ -65,12 +67,14 @@ resource "aws_ecs_task_definition" "server-task-definition" {
 }
 
 resource "aws_ecs_task_definition" "cli-task-definition" {
-  family                   = "instant-term-task"
+  family                   = "instant-term-cli-task"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = 256
   memory                   = 512
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  depends_on = [aws_cloudwatch_log_group.ecs_logs]
 
   container_definitions = jsonencode([
     {
@@ -80,7 +84,7 @@ resource "aws_ecs_task_definition" "cli-task-definition" {
         {
           containerPort = 80
           hostPort      = 80
-          protocol      = "tpc"
+          protocol      = "tcp"
         }
       ]
       logConfiguration = {
