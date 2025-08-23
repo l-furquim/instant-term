@@ -38,7 +38,7 @@ jobs:
       environment: dev
       aws-region: "us-east-1"
       cluster-name: ${{ needs.terraform.outputs.cluster_name }}
-      cli-task-arn: ${{ needs.terraform.outputs.cli_task_definition_arn }}
-      server-task-arn: ${{ needs.terraform.outputs.server_task_definition_arn }}
+      cli-task-arn: ${{ needs.terraform.outputs.cli_task_def_arn }}
+      server-task-arn: ${{ needs.terraform.outputs.server_task_def_arn }}
     secrets:
       AWS_ASSUME_ROLE_ARN: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
