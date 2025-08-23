@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Set destroy variable
         id: set
-        run: echo "destroy=false" >> $GITHUB_OUTPUT
+        run: echo "destroy=true" >> $GITHUB_OUTPUT
 
   terraform:
     needs: prepare
